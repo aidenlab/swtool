@@ -3,23 +3,25 @@
  * no other module should touch the DOM directly.
  */
 
-const statusArea  = () => document.getElementById('status-area')
-const convertBtn  = () => document.getElementById('convert-btn')
-const lcmOption   = () => document.getElementById('lcm-option')
-const modeMulti   = () => document.getElementById('mode-multi')
+const statusArea       = () => document.getElementById('status-area')
+const convertBtn       = () => document.getElementById('convert-btn')
+const lcmOption        = () => document.getElementById('lcm-option')
+const modeMulti        = () => document.getElementById('mode-multi')
+const pointModeSection = () => document.getElementById('point-mode-section')
 
 // ── State transitions ─────────────────────────────────────────────────────────
 
 export function showIdle() {
   statusArea().innerHTML = ''
   convertBtn().disabled = true
+  setPointModeSectionVisible(false)
 }
 
 export function showFileReady(filename) {
   statusArea().innerHTML = `
     <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0">
       <span>📄</span>
-      <span class="text-truncate"><strong>${escapeHtml(filename)}</strong> loaded — choose options and convert.</span>
+      <span class="text-truncate"><strong>${escapeHtml(filename)}</strong> loaded.</span>
     </div>`
   convertBtn().disabled = false
 }
@@ -58,6 +60,13 @@ export function showError(message) {
 }
 
 // ── Option helpers ────────────────────────────────────────────────────────────
+
+/** Show or hide the point mode radios (only needed for file picker / URL). */
+export function setPointModeSectionVisible(visible) {
+  const el = pointModeSection()
+  if (visible) el.classList.remove('d-none')
+  else el.classList.add('d-none')
+}
 
 /** Disable the live-contact-map checkbox when multi-point is selected. */
 export function syncLcmVisibility() {

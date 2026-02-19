@@ -8,6 +8,7 @@ import {
   showSuccess,
   showError,
   syncLcmVisibility,
+  setPointModeSectionVisible,
 } from './ui.js'
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -25,28 +26,42 @@ document.querySelectorAll('input[name="point-mode"]').forEach(radio => {
 })
 syncLcmVisibility()
 
-// ── Drop zone ─────────────────────────────────────────────────────────────────
+// ── Drop zones (ballstick = single-point, pointcloud = multi-point) ─────────────
 
-const dropZone  = document.getElementById('drop-zone')
+function setupDropZone(zoneId, fileInputId, mode) {
+  const zone = document.getElementById(zoneId)
+  const fileInput = document.getElementById(fileInputId)
+
+  zone.addEventListener('click', () => fileInput.click())
+  zone.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') fileInput.click()
+  })
+
+  zone.addEventListener('dragover', e => {
+    e.preventDefault()
+    zone.classList.add('drag-over')
+  })
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'))
+  zone.addEventListener('drop', e => {
+    e.preventDefault()
+    zone.classList.remove('drag-over')
+    const file = e.dataTransfer?.files?.[0]
+    if (file) loadFile(file, mode)
+  })
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0]
+    if (file) loadFile(file, mode)
+    fileInput.value = ''
+  })
+}
+
+setupDropZone('drop-zone-ballstick', 'file-input-ballstick', 'single_point')
+setupDropZone('drop-zone-pointcloud', 'file-input-pointcloud', 'multi_point')
+
+// ── File picker (no auto mode — user selects point mode manually) ─────────────
+
 const fileInput = document.getElementById('file-input')
-
-dropZone.addEventListener('click', () => fileInput.click())
-dropZone.addEventListener('keydown', e => {
-  if (e.key === 'Enter' || e.key === ' ') fileInput.click()
-})
-
-dropZone.addEventListener('dragover', e => {
-  e.preventDefault()
-  dropZone.classList.add('drag-over')
-})
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'))
-dropZone.addEventListener('drop', e => {
-  e.preventDefault()
-  dropZone.classList.remove('drag-over')
-  const file = e.dataTransfer?.files?.[0]
-  if (file) loadFile(file)
-})
-
 fileInput.addEventListener('change', () => {
   const file = fileInput.files?.[0]
   if (file) loadFile(file)
@@ -64,6 +79,7 @@ document.getElementById('url-fetch-btn').addEventListener('click', async () => {
     if (!resp.ok) throw new Error(`HTTP ${resp.status} — ${resp.statusText}`)
     const text = await resp.text()
     const filename = url.split('/').pop().split('?')[0] || 'file.swt'
+    setPointModeSectionVisible(true)
     acceptText(text, filename)
   } catch (err) {
     showError(`Could not fetch URL: ${err.message}`)
@@ -97,11 +113,19 @@ document.getElementById('convert-btn').addEventListener('click', async () => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function loadFile(file) {
+function loadFile(file, mode) {
   const extCheck = validateFileExtension(file.name)
   if (!extCheck.valid) {
     showError(extCheck.error)
     return
+  }
+
+  if (mode) {
+    document.getElementById(mode === 'single_point' ? 'mode-single' : 'mode-multi').checked = true
+    syncLcmVisibility()
+    setPointModeSectionVisible(false)
+  } else {
+    setPointModeSectionVisible(true)
   }
 
   const reader = new FileReader()

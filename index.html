@@ -18,13 +18,28 @@
     <div class="row justify-content-center">
       <div class="col-12 col-md-8 col-lg-6">
 
-        <!-- Drop zone -->
-        <div id="drop-zone" class="p-5 mb-4 rounded" role="button" tabindex="0"
-             aria-label="Drop a .swt file here or click to browse">
-          <span class="drop-icon">📂</span>
-          <p class="mb-0 fw-medium">Drop a <code>.swt</code> file here</p>
-          <p class="text-secondary small mb-0">or click to browse</p>
-          <input id="file-input" type="file" accept=".swt" class="d-none" />
+        <!-- Drop zones (image-based, auto-select point mode) -->
+        <div class="drop-zones-row mb-4">
+          <div id="drop-zone-ballstick" class="drop-zone-image rounded" role="button" tabindex="0"
+               aria-label="Drop a ball & stick .swt file here or click to browse">
+            <img src="/image/ballstick.png" alt="Ball & stick (single-point)" />
+            <p class="mb-0 fw-medium small">Ball &amp; stick</p>
+            <p class="text-secondary small mb-0">single-point</p>
+            <input id="file-input-ballstick" type="file" accept=".swt" class="d-none" />
+          </div>
+          <div id="drop-zone-pointcloud" class="drop-zone-image rounded" role="button" tabindex="0"
+               aria-label="Drop a point cloud .swt file here or click to browse">
+            <img src="/image/pointcloud.png" alt="Point cloud (multi-point)" />
+            <p class="mb-0 fw-medium small">Point cloud</p>
+            <p class="text-secondary small mb-0">multi-point</p>
+            <input id="file-input-pointcloud" type="file" accept=".swt" class="d-none" />
+          </div>
+        </div>
+
+        <!-- File picker -->
+        <div class="mb-4">
+          <label for="file-input" class="form-label text-secondary small">Or choose from file system</label>
+          <input id="file-input" type="file" accept=".swt" class="form-control form-control-sm" />
         </div>
 
         <!-- URL input -->
@@ -37,33 +52,32 @@
           </div>
         </div>
 
-        <!-- Options -->
-        <div id="options-panel" class="p-4 mb-4">
-          <p class="fw-medium mb-3">Conversion options</p>
-
-          <div class="mb-3">
-            <label class="form-label text-secondary small">Point mode</label>
-            <div class="d-flex gap-3">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="point-mode"
-                       id="mode-single" value="single_point" checked />
-                <label class="form-check-label" for="mode-single">Single-point (ball &amp; stick)</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="point-mode"
-                       id="mode-multi" value="multi_point" />
-                <label class="form-check-label" for="mode-multi">Multi-point (point cloud)</label>
-              </div>
+        <!-- Point mode (for file picker or URL) — shown only when needed -->
+        <div id="point-mode-section" class="mb-4 d-none">
+          <label class="form-label text-secondary small">Point mode (for file picker or URL)</label>
+          <div class="d-flex gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="point-mode"
+                     id="mode-single" value="single_point" checked />
+              <label class="form-check-label" for="mode-single">Single-point (ball &amp; stick)</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="point-mode"
+                     id="mode-multi" value="multi_point" />
+              <label class="form-check-label" for="mode-multi">Multi-point (point cloud)</label>
             </div>
           </div>
+        </div>
 
+        <!-- Output options -->
+        <div id="output-options-panel" class="p-4 mb-4">
+          <p class="fw-medium mb-3">Output options</p>
           <div class="form-check" id="lcm-option">
             <input class="form-check-input" type="checkbox" id="live-contact-map" />
             <label class="form-check-label" for="live-contact-map">
               Include live contact map vertices
             </label>
           </div>
-
           <div class="form-check">
             <input class="form-check-input" type="checkbox" id="include-index" checked />
             <label class="form-check-label" for="include-index">
