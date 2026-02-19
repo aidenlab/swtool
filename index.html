@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>swtool — Spacewalk Converter</title>
+  <link rel="stylesheet" href="/styles/main.scss" />
+</head>
+<body>
+  <header class="py-3 border-bottom border-secondary border-opacity-25">
+    <div class="container">
+      <h1 class="h4 mb-0 fw-semibold">swtool</h1>
+      <p class="text-secondary small mb-0">Convert Spacewalk text files (.swt) to binary HDF5 (.sw)</p>
+    </div>
+  </header>
+
+  <main class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
+
+        <!-- Drop zone -->
+        <div id="drop-zone" class="p-5 mb-4 rounded" role="button" tabindex="0"
+             aria-label="Drop a .swt file here or click to browse">
+          <span class="drop-icon">📂</span>
+          <p class="mb-0 fw-medium">Drop a <code>.swt</code> file here</p>
+          <p class="text-secondary small mb-0">or click to browse</p>
+          <input id="file-input" type="file" accept=".swt" class="d-none" />
+        </div>
+
+        <!-- URL input -->
+        <div class="mb-4">
+          <label for="url-input" class="form-label text-secondary small">Or fetch from URL</label>
+          <div class="input-group">
+            <input id="url-input" type="url" class="form-control"
+                   placeholder="https://…/file.swt" />
+            <button id="url-fetch-btn" class="btn btn-outline-secondary" type="button">Fetch</button>
+          </div>
+        </div>
+
+        <!-- Options -->
+        <div id="options-panel" class="p-4 mb-4">
+          <p class="fw-medium mb-3">Conversion options</p>
+
+          <div class="mb-3">
+            <label class="form-label text-secondary small">Point mode</label>
+            <div class="d-flex gap-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="point-mode"
+                       id="mode-single" value="single_point" checked />
+                <label class="form-check-label" for="mode-single">Single-point (ball &amp; stick)</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="point-mode"
+                       id="mode-multi" value="multi_point" />
+                <label class="form-check-label" for="mode-multi">Multi-point (point cloud)</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-check" id="lcm-option">
+            <input class="form-check-input" type="checkbox" id="live-contact-map" />
+            <label class="form-check-label" for="live-contact-map">
+              Include live contact map vertices
+            </label>
+          </div>
+        </div>
+
+        <!-- Status / feedback -->
+        <div id="status-area" class="mb-4"></div>
+
+        <!-- Convert button -->
+        <div class="d-grid">
+          <button id="convert-btn" class="btn btn-primary" type="button" disabled>
+            Convert &amp; Download
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-3 border-top border-secondary border-opacity-25 text-center text-secondary small">
+    <div class="container">
+      No data leaves your browser — conversion runs entirely client-side.
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

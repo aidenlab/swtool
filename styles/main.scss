@@ -1,0 +1,68 @@
+@use 'variables' as *;
+@use 'bootstrap/scss/bootstrap' with (
+  $primary: $primary,
+  $body-bg: $body-bg,
+  $body-color: $body-color,
+  $border-radius: $border-radius,
+  $font-family-sans-serif: $font-family-sans-serif
+);
+
+// ── Layout ────────────────────────────────────────────────────────────────────
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+// ── Drop zone ─────────────────────────────────────────────────────────────────
+
+#drop-zone {
+  border: 2px dashed rgba($primary, 0.5);
+  border-radius: $border-radius;
+  background: rgba($primary, 0.04);
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+
+  &.drag-over {
+    border-color: $primary;
+    background: rgba($primary, 0.1);
+  }
+
+  .drop-icon {
+    font-size: 3rem;
+    opacity: 0.5;
+  }
+}
+
+// ── Status area ───────────────────────────────────────────────────────────────
+
+#status-area {
+  min-height: 3rem;
+}
+
+// ── Options panel ─────────────────────────────────────────────────────────────
+
+#options-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $border-radius;
+}
+
+// ── Spinner ───────────────────────────────────────────────────────────────────
+
+.spinner-border {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-width: 0.15em;
+}
