@@ -2,6 +2,12 @@ import h5wasm, { FS } from 'h5wasm'
 import { writeHeader }       from './converter/headerWriter.js'
 import { writeRegionList }   from './converter/regionList.js'
 import { writeSpatialGroup } from './converter/spatialGroup.js'
+import {
+  buildIndex,
+  appendIndexToFile,
+  getIndexDatasetOffset,
+  addIndexOffsetAttribute,
+} from './indexer/hdf5Indexer.js'
 
 // FS is a live named export — null until h5wasm.ready resolves.
 let readyPromise = null
@@ -17,9 +23,10 @@ function ensureReady() {
  * @param {{ metadata, regions, traces }} parsedData  Output of parseSwtText()
  * @param {'single_point'|'multi_point'} mode
  * @param {boolean} liveContactMap
+ * @param {boolean} [includeIndex=true]  Add _index dataset for hdf5-indexed-reader
  * @returns {Promise<Uint8Array>}  Raw bytes of the .sw HDF5 file
  */
-export async function convertToSw(parsedData, mode, liveContactMap) {
+export async function convertToSw(parsedData, mode, liveContactMap, includeIndex = true) {
   const { metadata, regions, traces } = parsedData
 
   await ensureReady()
@@ -57,7 +64,18 @@ export async function convertToSw(parsedData, mode, liveContactMap) {
   file.close()
 
   // Read the bytes back from Emscripten's virtual FS
-  const bytes = FS.readFile(filename)
+  let bytes = FS.readFile(filename)
+
+  if (includeIndex) {
+    const index = buildIndex(bytes)
+    await appendIndexToFile(filename, bytes, index)
+    bytes = FS.readFile(filename)
+    const offset = getIndexDatasetOffset(bytes)
+    if (offset != null) {
+      await addIndexOffsetAttribute(filename, bytes, offset)
+      bytes = FS.readFile(filename)
+    }
+  }
 
   // Clean up the virtual FS entry
   FS.unlink(filename)

@@ -30,7 +30,8 @@ Output is in `dist/`. Serve it from any static host.
 1. Drag a `.swt` file onto the drop zone (or click to browse, or paste a URL).
 2. Select **Single-point** (ball & stick / ORCA-style) or **Multi-point** (point cloud / OligoSTORM-style).
 3. Optionally check **Include live contact map vertices** (single-point only).
-4. Click **Convert & Download** — the `.sw` file downloads automatically.
+4. Optionally check **Include index for web viewing** (default: on) — adds a path-to-offset index for efficient web-based dataset access. See [docs/HDF5_INDEXING.md](docs/HDF5_INDEXING.md).
+5. Click **Convert & Download** — the `.sw` file downloads automatically.
 
 ## .swt file format
 
@@ -49,6 +50,8 @@ trace 1
 ```
 <output>.sw
 ├── Header/          (attrs: version, author, date, name, genome, point_type)
+├── _index           (optional: gzipped path→offset index for web viewing)
+├── _index_offset    (optional: root attr, offset of _index dataset)
 └── <name>/
     ├── genomic_position/
     │   └── regions  (string dataset: sorted [chr, start, end])

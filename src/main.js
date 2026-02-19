@@ -77,6 +77,7 @@ document.getElementById('convert-btn').addEventListener('click', async () => {
 
   const mode = document.querySelector('input[name="point-mode"]:checked').value
   const liveContactMap = document.getElementById('live-contact-map').checked
+  const includeIndex = document.getElementById('include-index').checked
 
   showConverting()
 
@@ -85,7 +86,7 @@ document.getElementById('convert-btn').addEventListener('click', async () => {
 
   try {
     const parsed = parseSwtText(pendingText)
-    const bytes  = await convertToSw(parsed, mode, liveContactMap)
+    const bytes  = await convertToSw(parsed, mode, liveContactMap, includeIndex)
     const outputName = deriveOutputName(pendingFilename)
     showSuccess(outputName, bytes)
   } catch (err) {
