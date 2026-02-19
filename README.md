@@ -2,7 +2,7 @@
 
 Browser-based converter for Spacewalk text files (`.swt`) to HDF5 binary files (`.sw`).
 
-No installation required for end-users — drag and drop a `.swt` file, choose options, and download the result. All conversion runs entirely client-side; no data is sent to a server.
+No installation required for end-users — drop a `.swt` file onto the image that matches its type (ball & stick or point cloud), or use the file picker or URL. All conversion runs entirely client-side; no data is sent to a server.
 
 ## Prerequisites
 
@@ -27,11 +27,18 @@ Output is in `dist/`. Serve it from any static host.
 
 ## Usage
 
-1. Drag a `.swt` file onto the drop zone (or click to browse, or paste a URL).
-2. Select **Single-point** (ball & stick / ORCA-style) or **Multi-point** (point cloud / OligoSTORM-style).
-3. Optionally check **Include live contact map vertices** (single-point only).
-4. Optionally check **Include index for web viewing** (default: on) — adds a path-to-offset index for efficient web-based dataset access. See [docs/HDF5_INDEXING.md](docs/HDF5_INDEXING.md).
-5. Click **Convert & Download** — the `.sw` file downloads automatically.
+**Load a file** (choose one):
+
+- **Drag and drop** — Drop a `.swt` file onto the **ball & stick** or **point cloud** image that matches your file type. The conversion mode is selected automatically.
+- **File picker** — Click "Choose from file system" to browse for a file. You will then select single-point or multi-point.
+- **URL** — Enter a URL and click Fetch. You will then select single-point or multi-point.
+
+**Output options** (optional):
+
+- **Include live contact map vertices** (single-point only) — adds LCM vertices to the output.
+- **Include index for web viewing** (default: on) — adds a path-to-offset index for efficient web-based dataset access. See [docs/HDF5_INDEXING.md](docs/HDF5_INDEXING.md).
+
+**Convert** — Click **Convert & Download** to generate and download the `.sw` file.
 
 ## .swt file format
 
