@@ -1,16 +1,14 @@
-import h5wasm from 'h5wasm'
+import h5wasm, { FS } from 'h5wasm'
 import { writeHeader }       from './converter/headerWriter.js'
 import { writeRegionList }   from './converter/regionList.js'
 import { writeSpatialGroup } from './converter/spatialGroup.js'
 
-let h5wasmReady = null
+// FS is a live named export — null until h5wasm.ready resolves.
+let readyPromise = null
 
-async function getH5wasm() {
-  if (!h5wasmReady) {
-    h5wasmReady = h5wasm.ready
-  }
-  await h5wasmReady
-  return h5wasm
+function ensureReady() {
+  if (!readyPromise) readyPromise = h5wasm.ready
+  return readyPromise
 }
 
 /**
@@ -24,13 +22,13 @@ async function getH5wasm() {
 export async function convertToSw(parsedData, mode, liveContactMap) {
   const { metadata, regions, traces } = parsedData
 
-  const Module = await getH5wasm()
-  const { FS } = Module
+  await ensureReady()
+  // FS live binding is now populated.
 
   const filename = `/${metadata.name ?? 'output'}.sw`
 
   // Create in-memory HDF5 file
-  const file = new Module.File(filename, 'w')
+  const file = new h5wasm.File(filename, 'w')
 
   // Header group
   const headerGroup = writeHeader(file, metadata)
@@ -51,7 +49,7 @@ export async function convertToSw(parsedData, mode, liveContactMap) {
       name:  'live_contact_map_vertices',
       data:  lcmv.data,
       shape: lcmv.shape,
-      dtype: '<f8',
+      dtype: '<d',
     })
   }
 

@@ -55,7 +55,7 @@ function writeSinglePointDataset(group, name, points, liveContactMap, lcmvX, lcm
     }
   }
 
-  group.create_dataset({ name, data, shape: [n, 3], dtype: '<f8' })
+  group.create_dataset({ name, data, shape: [n, 3], dtype: '<d' })
 }
 
 // ── Multi-point ───────────────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ function writeMultiPointDataset(group, name, points, regionIndex) {
 
   const n = rows.length / 4
   const data = new Float64Array(rows)
-  group.create_dataset({ name, data, shape: [n, 4], dtype: '<f8' })
+  group.create_dataset({ name, data, shape: [n, 4], dtype: '<d' })
 }
 
 // ── Live contact map ──────────────────────────────────────────────────────────
