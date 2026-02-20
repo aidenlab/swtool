@@ -4,26 +4,13 @@
  */
 
 const statusArea       = () => document.getElementById('status-area')
-const convertBtn       = () => document.getElementById('convert-btn')
-const lcmOption        = () => document.getElementById('lcm-option')
-const modeMulti        = () => document.getElementById('mode-multi')
 const pointModeSection = () => document.getElementById('point-mode-section')
 
 // ── State transitions ─────────────────────────────────────────────────────────
 
 export function showIdle() {
   statusArea().innerHTML = ''
-  convertBtn().disabled = true
   setPointModeSectionVisible(false)
-}
-
-export function showFileReady(filename) {
-  statusArea().innerHTML = `
-    <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0">
-      <span>📄</span>
-      <span class="text-truncate"><strong>${escapeHtml(filename)}</strong> loaded.</span>
-    </div>`
-  convertBtn().disabled = false
 }
 
 export function showConverting() {
@@ -32,7 +19,6 @@ export function showConverting() {
       <span class="spinner-border text-info" role="status" aria-hidden="true"></span>
       <span>Converting…</span>
     </div>`
-  convertBtn().disabled = true
 }
 
 export function showSuccess(outputFilename, bytes) {
@@ -47,7 +33,6 @@ export function showSuccess(outputFilename, bytes) {
         Download ${escapeHtml(outputFilename)}
       </a>
     </div>`
-  convertBtn().disabled = false
 }
 
 export function showError(message) {
@@ -56,7 +41,6 @@ export function showError(message) {
       <span>❌</span>
       <span>${escapeHtml(message)}</span>
     </div>`
-  convertBtn().disabled = false
 }
 
 // ── Option helpers ────────────────────────────────────────────────────────────
@@ -66,16 +50,6 @@ export function setPointModeSectionVisible(visible) {
   const el = pointModeSection()
   if (visible) el.classList.remove('d-none')
   else el.classList.add('d-none')
-}
-
-/** Disable the live-contact-map checkbox when multi-point is selected. */
-export function syncLcmVisibility() {
-  const isMulti = modeMulti().checked
-  const lcm = lcmOption()
-  lcm.style.opacity = isMulti ? '0.4' : '1'
-  const checkbox = document.getElementById('live-contact-map')
-  checkbox.disabled = isMulti
-  if (isMulti) checkbox.checked = false
 }
 
 // ── Utils ─────────────────────────────────────────────────────────────────────

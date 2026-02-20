@@ -15,26 +15,26 @@
   </header>
 
   <main class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-12 col-md-8 col-lg-6">
-
-        <!-- Drop zones (image-based, auto-select point mode) -->
-        <div class="drop-zones-row mb-4">
-          <div id="drop-zone-ballstick" class="drop-zone-image rounded" role="button" tabindex="0"
-               aria-label="Drop a ball & stick .swt file here or click to browse">
-            <img src="/image/ballstick.png" alt="Ball & stick (single-point)" />
-            <p class="mb-0 fw-medium small">Ball &amp; stick</p>
-            <p class="text-secondary small mb-0">single-point</p>
+    <!-- Drop zones (full-width row so two 384px squares fit side by side) -->
+    <div class="row mb-4">
+      <div class="col-12 drop-zones-col">
+        <div class="drop-zones-row">
+          <div id="drop-zone-ballstick" class="drop-zone-image" role="button" tabindex="0"
+               aria-label="Drop ball and stick model here or click to browse">
+            <span class="drop-zone-overlay">drop ball and stick model here</span>
             <input id="file-input-ballstick" type="file" accept=".swt" class="d-none" />
           </div>
-          <div id="drop-zone-pointcloud" class="drop-zone-image rounded" role="button" tabindex="0"
-               aria-label="Drop a point cloud .swt file here or click to browse">
-            <img src="/image/pointcloud.png" alt="Point cloud (multi-point)" />
-            <p class="mb-0 fw-medium small">Point cloud</p>
-            <p class="text-secondary small mb-0">multi-point</p>
+          <div id="drop-zone-pointcloud" class="drop-zone-image" role="button" tabindex="0"
+               aria-label="Drop point cloud model here or click to browse">
+            <span class="drop-zone-overlay">drop point cloud model here</span>
             <input id="file-input-pointcloud" type="file" accept=".swt" class="d-none" />
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-6">
 
         <!-- File picker -->
         <div class="mb-4">
@@ -72,29 +72,16 @@
         <!-- Output options -->
         <div id="output-options-panel" class="p-4 mb-4">
           <p class="fw-medium mb-3">Output options</p>
-          <div class="form-check" id="lcm-option">
-            <input class="form-check-input" type="checkbox" id="live-contact-map" />
-            <label class="form-check-label" for="live-contact-map">
-              Include live contact map vertices
-            </label>
-          </div>
           <div class="form-check">
             <input class="form-check-input" type="checkbox" id="include-index" checked />
             <label class="form-check-label" for="include-index">
-              Include index for web viewing
+              Include indexing for better performance
             </label>
           </div>
         </div>
 
         <!-- Status / feedback -->
         <div id="status-area" class="mb-4"></div>
-
-        <!-- Convert button -->
-        <div class="d-grid">
-          <button id="convert-btn" class="btn btn-primary" type="button" disabled>
-            Convert &amp; Download
-          </button>
-        </div>
 
       </div>
     </div>

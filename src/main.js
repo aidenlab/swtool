@@ -3,11 +3,9 @@ import { parseSwtText }  from './parser/swtParser.js'
 import { convertToSw }   from './hdf5Writer.js'
 import {
   showIdle,
-  showFileReady,
   showConverting,
   showSuccess,
   showError,
-  syncLcmVisibility,
   setPointModeSectionVisible,
 } from './ui.js'
 
@@ -19,12 +17,6 @@ let pendingFilename = null   // original filename (for deriving output name)
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
 showIdle()
-
-// Keep the live-contact-map checkbox in sync with the mode radios
-document.querySelectorAll('input[name="point-mode"]').forEach(radio => {
-  radio.addEventListener('change', syncLcmVisibility)
-})
-syncLcmVisibility()
 
 // ── Drop zones (ballstick = single-point, pointcloud = multi-point) ─────────────
 
@@ -80,34 +72,9 @@ document.getElementById('url-fetch-btn').addEventListener('click', async () => {
     const text = await resp.text()
     const filename = url.split('/').pop().split('?')[0] || 'file.swt'
     setPointModeSectionVisible(true)
-    acceptText(text, filename)
+    await acceptText(text, filename)
   } catch (err) {
     showError(`Could not fetch URL: ${err.message}`)
-  }
-})
-
-// ── Convert button ────────────────────────────────────────────────────────────
-
-document.getElementById('convert-btn').addEventListener('click', async () => {
-  if (!pendingText) return
-
-  const mode = document.querySelector('input[name="point-mode"]:checked').value
-  const liveContactMap = document.getElementById('live-contact-map').checked
-  const includeIndex = document.getElementById('include-index').checked
-
-  showConverting()
-
-  // Yield to the browser so the spinner has a chance to paint
-  await new Promise(r => setTimeout(r, 0))
-
-  try {
-    const parsed = parseSwtText(pendingText)
-    const bytes  = await convertToSw(parsed, mode, liveContactMap, includeIndex)
-    const outputName = deriveOutputName(pendingFilename)
-    showSuccess(outputName, bytes)
-  } catch (err) {
-    showError(err.message)
-    console.error(err)
   }
 })
 
@@ -122,19 +89,20 @@ function loadFile(file, mode) {
 
   if (mode) {
     document.getElementById(mode === 'single_point' ? 'mode-single' : 'mode-multi').checked = true
-    syncLcmVisibility()
     setPointModeSectionVisible(false)
   } else {
     setPointModeSectionVisible(true)
   }
 
   const reader = new FileReader()
-  reader.onload = e => acceptText(e.target.result, file.name)
+  reader.onload = async e => {
+    await acceptText(e.target.result, file.name)
+  }
   reader.onerror = () => showError('Could not read the file.')
   reader.readAsText(file)
 }
 
-function acceptText(text, filename) {
+async function acceptText(text, filename) {
   const headerLine = text.split(/\r?\n/)[0] ?? ''
   const headerCheck = validateHeader(headerLine)
   if (!headerCheck.valid) {
@@ -144,7 +112,28 @@ function acceptText(text, filename) {
 
   pendingText     = text
   pendingFilename = filename
-  showFileReady(filename)
+  await runConversion()
+}
+
+async function runConversion() {
+  if (!pendingText) return
+
+  const mode = document.querySelector('input[name="point-mode"]:checked').value
+  const includeIndex = document.getElementById('include-index').checked
+
+  showConverting()
+
+  await new Promise(r => setTimeout(r, 0))
+
+  try {
+    const parsed = parseSwtText(pendingText)
+    const bytes  = await convertToSw(parsed, mode, false, includeIndex)
+    const outputName = deriveOutputName(pendingFilename)
+    showSuccess(outputName, bytes)
+  } catch (err) {
+    showError(err.message)
+    console.error(err)
+  }
 }
 
 function deriveOutputName(filename) {
