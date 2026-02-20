@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/styles/main.scss" />
 </head>
 <body>
-  <header class="py-3 border-bottom border-secondary border-opacity-25">
+  <header class="py-3 border-bottom">
     <div class="container">
       <h1 class="h4 mb-0 fw-semibold">swtool</h1>
       <p class="text-secondary small mb-0">Convert Spacewalk text files (.swt) to binary HDF5 (.sw)</p>
@@ -35,59 +35,61 @@
 
     <div class="row justify-content-center">
       <div class="col-12 col-md-8 col-lg-6">
+        <div class="border rounded p-4 mb-4">
 
-        <!-- File picker -->
-        <div class="mb-4">
-          <label for="file-input" class="form-label text-secondary small">Or choose from file system</label>
-          <input id="file-input" type="file" accept=".swt" class="form-control form-control-sm" />
-        </div>
-
-        <!-- URL input -->
-        <div class="mb-4">
-          <label for="url-input" class="form-label text-secondary small">Or fetch from URL</label>
-          <div class="input-group">
-            <input id="url-input" type="url" class="form-control"
-                   placeholder="https://…/file.swt" />
-            <button id="url-fetch-btn" class="btn btn-outline-secondary" type="button">Fetch</button>
+          <!-- File picker -->
+          <div class="mb-4">
+            <label for="file-input" class="form-label text-secondary small">Or choose from file system</label>
+            <input id="file-input" type="file" accept=".swt" class="form-control form-control-sm" />
           </div>
-        </div>
 
-        <!-- Point mode (for file picker or URL) — shown only when needed -->
-        <div id="point-mode-section" class="mb-4 d-none">
-          <label class="form-label text-secondary small">Point mode (for file picker or URL)</label>
-          <div class="d-flex gap-3">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="point-mode"
-                     id="mode-single" value="single_point" checked />
-              <label class="form-check-label" for="mode-single">Single-point (ball &amp; stick)</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="point-mode"
-                     id="mode-multi" value="multi_point" />
-              <label class="form-check-label" for="mode-multi">Multi-point (point cloud)</label>
+          <!-- URL input -->
+          <div class="mb-4">
+            <label for="url-input" class="form-label text-secondary small">Or fetch from URL</label>
+            <div class="input-group">
+              <input id="url-input" type="url" class="form-control"
+                     placeholder="https://…/file.swt" />
+              <button id="url-fetch-btn" class="btn btn-outline-secondary" type="button">Fetch</button>
             </div>
           </div>
-        </div>
 
-        <!-- Output options -->
-        <div id="output-options-panel" class="p-4 mb-4">
-          <p class="fw-medium mb-3">Output options</p>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="include-index" checked />
-            <label class="form-check-label" for="include-index">
-              Include indexing for better performance
-            </label>
+          <!-- Point mode (for file picker or URL) — shown only when needed -->
+          <div id="point-mode-section" class="mb-4 d-none">
+            <label class="form-label text-secondary small">Point mode (for file picker or URL)</label>
+            <div class="d-flex gap-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="point-mode"
+                       id="mode-single" value="single_point" checked />
+                <label class="form-check-label" for="mode-single">Single-point (ball &amp; stick)</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="point-mode"
+                       id="mode-multi" value="multi_point" />
+                <label class="form-check-label" for="mode-multi">Multi-point (point cloud)</label>
+              </div>
+            </div>
           </div>
+
+          <!-- Output options -->
+          <div id="output-options-panel" class="p-3 mb-4">
+            <p class="fw-medium mb-3">Output options</p>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="include-index" checked />
+              <label class="form-check-label" for="include-index">
+                Include indexing for better performance
+              </label>
+            </div>
+          </div>
+
+          <!-- Status / feedback -->
+          <div id="status-area"></div>
+
         </div>
-
-        <!-- Status / feedback -->
-        <div id="status-area" class="mb-4"></div>
-
       </div>
     </div>
   </main>
 
-  <footer class="py-3 border-top border-secondary border-opacity-25 text-center text-secondary small">
+  <footer class="py-3 border-top text-center text-secondary small">
     <div class="container">
       No data leaves your browser — conversion runs entirely client-side.
     </div>
