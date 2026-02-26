@@ -1,6 +1,6 @@
 # swtool
 
-Browser-based converter for Spacewalk text files (`.swt`) to HDF5 binary files (`.sw`).
+Browser-based replacement for [swt2sw](https://github.com/turner/swt2sw), a Python command-line tool that converts Spacewalk text files (`.swt`) to HDF5 binary files (`.sw`). swtool includes a complete JavaScript rewrite of the Python-based HDF5 indexer from swt2sw.
 
 No installation required for end-users — drop a `.swt` file onto the image that matches its type (ball & stick or point cloud), or use the file picker or URL. All conversion runs entirely client-side; no data is sent to a server.
 

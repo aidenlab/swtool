@@ -15,7 +15,9 @@ There is no test runner or linter configured.
 
 ## What This Project Does
 
-**swtool** converts Spacewalk text files (`.swt`) into HDF5 binary files (`.sw`). It runs entirely in the browser — no server, no data transmission. Built with Vite, Bootstrap, SCSS, and h5wasm (WebAssembly-based HDF5 library).
+**swtool** is a browser-based replacement for [swt2sw](https://github.com/turner/swt2sw), a Python command-line tool that converts Spacewalk text files (`.swt`) into HDF5 binary files (`.sw`). swtool runs entirely in the browser — no server, no installation, no data transmission. Built with Vite, Bootstrap, SCSS, and h5wasm (WebAssembly-based HDF5 library).
+
+The HDF5 indexer (`src/indexer/hdf5Indexer.js`) is a complete JavaScript rewrite of the Python-based indexer from swt2sw. It uses jsfive (a pure-JS HDF5 reader) to read back the generated HDF5 bytes, build a path→offset map, gzip it, and append it as a `_index` dataset — reproducing the same index format as the original Python implementation.
 
 ## Architecture
 
