@@ -52,6 +52,19 @@ export function setPointModeSectionVisible(visible) {
   else el.classList.add('d-none')
 }
 
+/** Show the spinner overlay on a specific drop zone. */
+export function showDropZoneSpinner(zoneId) {
+  const spinner = document.querySelector(`#${zoneId} .drop-zone-spinner`)
+  if (spinner) spinner.classList.remove('d-none')
+}
+
+/** Hide all drop zone spinner overlays. */
+export function hideDropZoneSpinners() {
+  for (const el of document.querySelectorAll('.drop-zone-spinner')) {
+    el.classList.add('d-none')
+  }
+}
+
 // ── Utils ─────────────────────────────────────────────────────────────────────
 
 function escapeHtml(str) {

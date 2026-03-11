@@ -7,12 +7,16 @@ import {
   showSuccess,
   showError,
   setPointModeSectionVisible,
+  showDropZoneSpinner,
+  hideDropZoneSpinners,
 } from './ui.js'
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
-let pendingText     = null   // raw .swt file contents
+let pendingFile     = null   // File object for streaming parse
+let pendingText     = null   // raw .swt text (URL fetch only)
 let pendingFilename = null   // original filename (for deriving output name)
+let activeDropZone  = null   // which drop zone initiated the current conversion
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
@@ -38,12 +42,12 @@ function setupDropZone(zoneId, fileInputId, mode) {
     e.preventDefault()
     zone.classList.remove('drag-over')
     const file = e.dataTransfer?.files?.[0]
-    if (file) loadFile(file, mode)
+    if (file) loadFile(file, mode, zoneId)
   })
 
   fileInput.addEventListener('change', () => {
     const file = fileInput.files?.[0]
-    if (file) loadFile(file, mode)
+    if (file) loadFile(file, mode, zoneId)
     fileInput.value = ''
   })
 }
@@ -80,7 +84,7 @@ document.getElementById('url-fetch-btn').addEventListener('click', async () => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function loadFile(file, mode) {
+async function loadFile(file, mode, zoneId) {
   const extCheck = validateFileExtension(file.name)
   if (!extCheck.valid) {
     showError(extCheck.error)
@@ -94,12 +98,21 @@ function loadFile(file, mode) {
     setPointModeSectionVisible(true)
   }
 
-  const reader = new FileReader()
-  reader.onload = async e => {
-    await acceptText(e.target.result, file.name)
+  // Read only the first 1 KB to validate the header — avoids loading the entire file
+  const headerSlice = file.slice(0, 1024)
+  const headerText = await headerSlice.text()
+  const headerLine = headerText.split(/\r?\n/)[0] ?? ''
+  const headerCheck = validateHeader(headerLine)
+  if (!headerCheck.valid) {
+    showError(headerCheck.error)
+    return
   }
-  reader.onerror = () => showError('Could not read the file.')
-  reader.readAsText(file)
+
+  pendingFile     = file
+  pendingText     = null
+  pendingFilename = file.name
+  activeDropZone  = zoneId ?? null
+  await runConversion()
 }
 
 async function acceptText(text, filename) {
@@ -111,26 +124,36 @@ async function acceptText(text, filename) {
   }
 
   pendingText     = text
+  pendingFile     = null
   pendingFilename = filename
+  activeDropZone  = null
   await runConversion()
 }
 
 async function runConversion() {
-  if (!pendingText) return
+  if (!pendingFile && !pendingText) return
 
   const mode = document.querySelector('input[name="point-mode"]:checked').value
   const includeIndex = document.getElementById('include-index').checked
 
   showConverting()
+  if (activeDropZone) showDropZoneSpinner(activeDropZone)
 
   await new Promise(r => setTimeout(r, 0))
 
   try {
-    const parsed = parseSwtText(pendingText)
-    const bytes  = await convertToSw(parsed, mode, false, includeIndex)
+    let bytes
+    if (pendingFile) {
+      bytes = await convertFileInWorker(pendingFile, mode, includeIndex)
+    } else {
+      const parsed = parseSwtText(pendingText)
+      bytes = await convertToSw(parsed, mode, false, includeIndex)
+    }
     const outputName = deriveOutputName(pendingFilename)
+    hideDropZoneSpinners()
     showSuccess(outputName, bytes)
   } catch (err) {
+    hideDropZoneSpinners()
     showError(err.message)
     console.error(err)
   }
@@ -138,4 +161,23 @@ async function runConversion() {
 
 function deriveOutputName(filename) {
   return filename.replace(/\.swt$/i, '') + '.sw'
+}
+
+function convertFileInWorker(file, mode, includeIndex) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(
+      new URL('./parser/swtParser.worker.js', import.meta.url),
+      { type: 'module' },
+    )
+    worker.onmessage = ({ data }) => {
+      worker.terminate()
+      if (data.ok) resolve(data.bytes)
+      else reject(new Error(data.error))
+    }
+    worker.onerror = (e) => {
+      worker.terminate()
+      reject(new Error(e.message ?? 'Worker failed'))
+    }
+    worker.postMessage({ file, mode, includeIndex })
+  })
 }
