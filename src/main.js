@@ -6,13 +6,15 @@ import {
   showConverting,
   showSuccess,
   showError,
-  setPointModeSectionVisible,
+  updateModeUI,
+  hideInputPanel,
   showDropZoneSpinner,
   hideDropZoneSpinners,
 } from './ui.js'
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
+let selectedMode    = null   // 'single_point' | 'multi_point'
 let pendingFile     = null   // File object for streaming parse
 let pendingText     = null   // raw .swt text (URL fetch only)
 let pendingFilename = null   // original filename (for deriving output name)
@@ -22,15 +24,21 @@ let activeDropZone  = null   // which drop zone initiated the current conversion
 
 showIdle()
 
-// ── Drop zones (ballstick = single-point, pointcloud = multi-point) ─────────────
+// ── Mode selection ───────────────────────────────────────────────────────────
 
-function setupDropZone(zoneId, fileInputId, mode) {
+function selectMode(mode) {
+  selectedMode = mode
+  updateModeUI(mode)
+}
+
+// ── Drop zones (ballstick = single-point, pointcloud = multi-point) ─────────
+
+function setupDropZone(zoneId, mode) {
   const zone = document.getElementById(zoneId)
-  const fileInput = document.getElementById(fileInputId)
 
-  zone.addEventListener('click', () => fileInput.click())
+  zone.addEventListener('click', () => selectMode(mode))
   zone.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') fileInput.click()
+    if (e.key === 'Enter' || e.key === ' ') selectMode(mode)
   })
 
   zone.addEventListener('dragover', e => {
@@ -42,32 +50,42 @@ function setupDropZone(zoneId, fileInputId, mode) {
     e.preventDefault()
     zone.classList.remove('drag-over')
     const file = e.dataTransfer?.files?.[0]
-    if (file) loadFile(file, mode, zoneId)
-  })
-
-  fileInput.addEventListener('change', () => {
-    const file = fileInput.files?.[0]
-    if (file) loadFile(file, mode, zoneId)
-    fileInput.value = ''
+    if (file) {
+      selectMode(mode)
+      loadFile(file, mode, zoneId)
+    }
   })
 }
 
-setupDropZone('drop-zone-ballstick', 'file-input-ballstick', 'single_point')
-setupDropZone('drop-zone-pointcloud', 'file-input-pointcloud', 'multi_point')
+setupDropZone('drop-zone-ballstick', 'single_point')
+setupDropZone('drop-zone-pointcloud', 'multi_point')
 
-// ── File picker (no auto mode — user selects point mode manually) ─────────────
+// ── Click outside to dismiss ─────────────────────────────────────────────────
+
+document.addEventListener('click', (e) => {
+  if (!selectedMode) return
+  const panel = document.getElementById('input-panel')
+  const cards = document.querySelector('.drop-zones-row')
+  if (!panel.contains(e.target) && !cards.contains(e.target)) {
+    selectedMode = null
+    hideInputPanel()
+  }
+})
+
+// ── File picker ──────────────────────────────────────────────────────────────
 
 const fileInput = document.getElementById('file-input')
 fileInput.addEventListener('change', () => {
   const file = fileInput.files?.[0]
-  if (file) loadFile(file)
+  if (file && selectedMode) loadFile(file, selectedMode)
+  fileInput.value = ''
 })
 
-// ── URL fetch ─────────────────────────────────────────────────────────────────
+// ── URL fetch ────────────────────────────────────────────────────────────────
 
 document.getElementById('url-fetch-btn').addEventListener('click', async () => {
   const url = document.getElementById('url-input').value.trim()
-  if (!url) return
+  if (!url || !selectedMode) return
 
   showConverting()
   try {
@@ -75,8 +93,7 @@ document.getElementById('url-fetch-btn').addEventListener('click', async () => {
     if (!resp.ok) throw new Error(`HTTP ${resp.status} — ${resp.statusText}`)
     const text = await resp.text()
     const filename = url.split('/').pop().split('?')[0] || 'file.swt'
-    setPointModeSectionVisible(true)
-    await acceptText(text, filename)
+    await acceptText(text, filename, selectedMode)
   } catch (err) {
     showError(`Could not fetch URL: ${err.message}`)
   }
@@ -89,13 +106,6 @@ async function loadFile(file, mode, zoneId) {
   if (!extCheck.valid) {
     showError(extCheck.error)
     return
-  }
-
-  if (mode) {
-    document.getElementById(mode === 'single_point' ? 'mode-single' : 'mode-multi').checked = true
-    setPointModeSectionVisible(false)
-  } else {
-    setPointModeSectionVisible(true)
   }
 
   // Read only the first 1 KB to validate the header — avoids loading the entire file
@@ -112,10 +122,10 @@ async function loadFile(file, mode, zoneId) {
   pendingText     = null
   pendingFilename = file.name
   activeDropZone  = zoneId ?? null
-  await runConversion()
+  await runConversion(mode)
 }
 
-async function acceptText(text, filename) {
+async function acceptText(text, filename, mode) {
   const headerLine = text.split(/\r?\n/)[0] ?? ''
   const headerCheck = validateHeader(headerLine)
   if (!headerCheck.valid) {
@@ -127,13 +137,12 @@ async function acceptText(text, filename) {
   pendingFile     = null
   pendingFilename = filename
   activeDropZone  = null
-  await runConversion()
+  await runConversion(mode)
 }
 
-async function runConversion() {
+async function runConversion(mode) {
   if (!pendingFile && !pendingText) return
 
-  const mode = document.querySelector('input[name="point-mode"]:checked').value
   const includeIndex = document.getElementById('include-index').checked
 
   showConverting()

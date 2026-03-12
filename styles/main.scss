@@ -19,6 +19,44 @@ main {
   flex: 1;
 }
 
+// ── Mode cards ───────────────────────────────────────────────────────────────
+
+.mode-card {
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.mode-card-label {
+  margin: 0.75rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: $body-color;
+  transition: color 0.2s, opacity 0.2s;
+}
+
+.mode-card--selected {
+  > .drop-zone-image {
+    border-color: rgba(0, 0, 0, 0.45);
+  }
+}
+
+// Heavily dim unselected card — zero ambiguity
+.drop-zones-row:has(.mode-card--selected) .mode-card:not(.mode-card--selected) {
+  > .drop-zone-image {
+    opacity: 0.2;
+  }
+
+  > .mode-card-label {
+    opacity: 0.2;
+  }
+}
+
+// ── Mode indicator ───────────────────────────────────────────────────────────
+
+#mode-indicator {
+  font-weight: 500;
+}
+
 // ── Drop zones (image-based) ───────────────────────────────────────────────────
 
 .drop-zones-col {
@@ -35,8 +73,8 @@ main {
 
 .drop-zone-image {
   position: relative;
-  width: 384px;
-  height: 384px;
+  width: 448px;
+  height: 448px;
   flex-shrink: 0;
   border: 1.5px solid rgba(0, 0, 0, 0.18);
   border-radius: 16px;
@@ -44,8 +82,9 @@ main {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, opacity 0.3s;
   cursor: pointer;
+  outline: none;
 
   &#drop-zone-ballstick {
     background-image: url('/image/ballstick.png');
