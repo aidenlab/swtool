@@ -3,14 +3,19 @@
  * no other module should touch the DOM directly.
  */
 
-const statusArea       = () => document.getElementById('status-area')
-const pointModeSection = () => document.getElementById('point-mode-section')
+const statusArea     = () => document.getElementById('status-area')
+const modeIndicator  = () => document.getElementById('mode-indicator')
+const inputPanel     = () => document.getElementById('input-panel')
+
+const MODE_LABELS = {
+  single_point: 'Ball & Stick',
+  multi_point:  'Point Cloud',
+}
 
 // ── State transitions ─────────────────────────────────────────────────────────
 
 export function showIdle() {
   statusArea().innerHTML = ''
-  setPointModeSectionVisible(false)
 }
 
 export function showConverting() {
@@ -43,13 +48,29 @@ export function showError(message) {
     </div>`
 }
 
-// ── Option helpers ────────────────────────────────────────────────────────────
+// ── Mode UI ──────────────────────────────────────────────────────────────────
 
-/** Show or hide the point mode radios (only needed for file picker / URL). */
-export function setPointModeSectionVisible(visible) {
-  const el = pointModeSection()
-  if (visible) el.classList.remove('d-none')
-  else el.classList.add('d-none')
+export function updateModeUI(mode) {
+  // Toggle selected class on mode cards
+  for (const card of document.querySelectorAll('.mode-card')) {
+    card.classList.toggle('mode-card--selected', card.dataset.mode === mode)
+  }
+
+  // Update indicator text
+  const label = MODE_LABELS[mode] ?? mode
+  modeIndicator().textContent = `Converting as: ${label}`
+
+  // Reveal the input panel
+  inputPanel().classList.remove('d-none')
+}
+
+export function hideInputPanel() {
+  inputPanel().classList.add('d-none')
+
+  // Deselect all mode cards
+  for (const card of document.querySelectorAll('.mode-card')) {
+    card.classList.remove('mode-card--selected')
+  }
 }
 
 /** Show the spinner overlay on a specific drop zone. */
