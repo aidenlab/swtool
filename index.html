@@ -70,6 +70,11 @@
             </div>
           </div>
 
+          <!-- Staged file indicator -->
+          <div id="staged-file" class="alert alert-light d-flex align-items-center gap-2 mb-4 d-none">
+            <span id="staged-file-name"></span>
+          </div>
+
           <!-- Output options -->
           <div id="output-options-panel" class="p-3 mb-4">
             <p class="fw-medium mb-3">Output options</p>
@@ -79,6 +84,12 @@
                 Include indexing for better performance
               </label>
             </div>
+          </div>
+
+          <!-- Convert / Cancel buttons -->
+          <div id="action-buttons" class="d-flex gap-2 mb-4 d-none">
+            <button id="convert-btn" class="btn btn-primary" type="button">Convert</button>
+            <button id="cancel-btn" class="btn btn-outline-secondary" type="button">Cancel</button>
           </div>
 
           <!-- Status / feedback -->
