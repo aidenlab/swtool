@@ -8,14 +8,17 @@
  * regions: deduplicated, start-sorted array of [chr, start, end] (all strings)
  * traces:  Map<traceIndex, Array<{chr, start, end, x, y, z}>>
  */
-export async function parseSwtFile(file) {
+export async function parseSwtFile(fileOrStream) {
   const regionMap = new Map()   // key → [chr, start, end]
   const traces = new Map()      // traceIndex → [{chr, start, end, x, y, z}]
   let currentTrace = null
   let metadata = null
   let lineNumber = 0
 
-  const stream = file.stream().pipeThrough(new TextDecoderStream())
+  const byteStream = (fileOrStream instanceof ReadableStream)
+    ? fileOrStream
+    : fileOrStream.stream()
+  const stream = byteStream.pipeThrough(new TextDecoderStream())
   let remainder = ''
 
   for await (const chunk of stream) {

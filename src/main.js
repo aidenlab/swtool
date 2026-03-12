@@ -1,6 +1,4 @@
 import { validateFileExtension, validateHeader } from './parser/validation.js'
-import { parseSwtText }  from './parser/swtParser.js'
-import { convertToSw }   from './hdf5Writer.js'
 import {
   showIdle,
   showConverting,
@@ -10,13 +8,16 @@ import {
   hideInputPanel,
   showDropZoneSpinner,
   hideDropZoneSpinners,
+  showStagedFile,
+  hideStagedFile,
+  resetInputPanel,
 } from './ui.js'
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
 let selectedMode    = null   // 'single_point' | 'multi_point'
 let pendingFile     = null   // File object for streaming parse
-let pendingText     = null   // raw .swt text (URL fetch only)
+let pendingUrl      = null   // normalized URL for streaming fetch in worker
 let pendingFilename = null   // original filename (for deriving output name)
 let activeDropZone  = null   // which drop zone initiated the current conversion
 
@@ -52,7 +53,7 @@ function setupDropZone(zoneId, mode) {
     const file = e.dataTransfer?.files?.[0]
     if (file) {
       selectMode(mode)
-      loadFile(file, mode, zoneId)
+      stageFile(file, zoneId)
     }
   })
 }
@@ -67,7 +68,7 @@ document.addEventListener('click', (e) => {
   const panel = document.getElementById('input-panel')
   const cards = document.querySelector('.drop-zones-row')
   if (!panel.contains(e.target) && !cards.contains(e.target)) {
-    selectedMode = null
+    clearStaged()
     hideInputPanel()
   }
 })
@@ -77,38 +78,45 @@ document.addEventListener('click', (e) => {
 const fileInput = document.getElementById('file-input')
 fileInput.addEventListener('change', () => {
   const file = fileInput.files?.[0]
-  if (file && selectedMode) loadFile(file, selectedMode)
+  if (file && selectedMode) stageFile(file)
   fileInput.value = ''
 })
 
 // ── URL fetch ────────────────────────────────────────────────────────────────
 
-document.getElementById('url-fetch-btn').addEventListener('click', async () => {
-  const url = document.getElementById('url-input').value.trim()
-  if (!url || !selectedMode) return
+document.getElementById('url-fetch-btn').addEventListener('click', () => {
+  const rawUrl = document.getElementById('url-input').value.trim()
+  if (!rawUrl || !selectedMode) return
 
-  showConverting()
-  try {
-    const resp = await fetch(url)
-    if (!resp.ok) throw new Error(`HTTP ${resp.status} — ${resp.statusText}`)
-    const text = await resp.text()
-    const filename = url.split('/').pop().split('?')[0] || 'file.swt'
-    await acceptText(text, filename, selectedMode)
-  } catch (err) {
-    showError(`Could not fetch URL: ${err.message}`)
+  const url = normalizeUrl(rawUrl)
+  console.log(`[url-fetch] staged: ${url}`)
+
+  const filename = url.split('/').pop().split('?')[0] || 'file.swt'
+  stageUrl(url, filename)
+})
+
+// ── Convert / Cancel buttons ─────────────────────────────────────────────────
+
+document.getElementById('convert-btn').addEventListener('click', () => {
+  if (selectedMode && (pendingFile || pendingUrl)) {
+    runConversion(selectedMode)
   }
 })
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+document.getElementById('cancel-btn').addEventListener('click', () => {
+  clearStaged()
+  hideInputPanel()
+})
 
-async function loadFile(file, mode, zoneId) {
+// ── Staging helpers ──────────────────────────────────────────────────────────
+
+async function stageFile(file, zoneId) {
   const extCheck = validateFileExtension(file.name)
   if (!extCheck.valid) {
     showError(extCheck.error)
     return
   }
 
-  // Read only the first 1 KB to validate the header — avoids loading the entire file
   const headerSlice = file.slice(0, 1024)
   const headerText = await headerSlice.text()
   const headerLine = headerText.split(/\r?\n/)[0] ?? ''
@@ -119,29 +127,33 @@ async function loadFile(file, mode, zoneId) {
   }
 
   pendingFile     = file
-  pendingText     = null
+  pendingUrl      = null
   pendingFilename = file.name
   activeDropZone  = zoneId ?? null
-  await runConversion(mode)
+  showStagedFile(file.name)
 }
 
-async function acceptText(text, filename, mode) {
-  const headerLine = text.split(/\r?\n/)[0] ?? ''
-  const headerCheck = validateHeader(headerLine)
-  if (!headerCheck.valid) {
-    showError(headerCheck.error)
-    return
-  }
-
-  pendingText     = text
+function stageUrl(url, filename) {
+  pendingUrl      = url
   pendingFile     = null
   pendingFilename = filename
   activeDropZone  = null
-  await runConversion(mode)
+  showStagedFile(filename)
 }
 
+function clearStaged() {
+  pendingFile     = null
+  pendingUrl      = null
+  pendingFilename = null
+  activeDropZone  = null
+  selectedMode    = null
+  hideStagedFile()
+}
+
+// ── Conversion ───────────────────────────────────────────────────────────────
+
 async function runConversion(mode) {
-  if (!pendingFile && !pendingText) return
+  if (!pendingFile && !pendingUrl) return
 
   const includeIndex = document.getElementById('include-index').checked
 
@@ -151,16 +163,13 @@ async function runConversion(mode) {
   await new Promise(r => setTimeout(r, 0))
 
   try {
-    let bytes
-    if (pendingFile) {
-      bytes = await convertFileInWorker(pendingFile, mode, includeIndex)
-    } else {
-      const parsed = parseSwtText(pendingText)
-      bytes = await convertToSw(parsed, mode, false, includeIndex)
-    }
+    const bytes = await convertInWorker({ file: pendingFile, url: pendingUrl, mode, includeIndex })
     const outputName = deriveOutputName(pendingFilename)
     hideDropZoneSpinners()
-    showSuccess(outputName, bytes)
+    showSuccess(outputName, bytes, () => {
+      clearStaged()
+      resetInputPanel()
+    })
   } catch (err) {
     hideDropZoneSpinners()
     showError(err.message)
@@ -168,11 +177,25 @@ async function runConversion(mode) {
   }
 }
 
+/** Rewrite known hosting URLs so they serve raw files with CORS headers. */
+function normalizeUrl(url) {
+  // Dropbox: swap domain to dl.dropboxusercontent.com for direct CORS access
+  if (/www\.dropbox\.com\//.test(url)) {
+    const normalized = url
+      .replace('www.dropbox.com', 'dl.dropboxusercontent.com')
+      .replace(/[?&]dl=[01]/, '')
+    console.log(`[normalizeUrl] Dropbox detected, rewrote domain`)
+    return normalized
+  }
+  console.log(`[normalizeUrl] no rewrite needed`)
+  return url
+}
+
 function deriveOutputName(filename) {
   return filename.replace(/\.swt$/i, '') + '.sw'
 }
 
-function convertFileInWorker(file, mode, includeIndex) {
+function convertInWorker(msg) {
   return new Promise((resolve, reject) => {
     const worker = new Worker(
       new URL('./parser/swtParser.worker.js', import.meta.url),
@@ -187,6 +210,6 @@ function convertFileInWorker(file, mode, includeIndex) {
       worker.terminate()
       reject(new Error(e.message ?? 'Worker failed'))
     }
-    worker.postMessage({ file, mode, includeIndex })
+    worker.postMessage(msg)
   })
 }
