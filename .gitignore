@@ -2,6 +2,7 @@ node_modules/
 dist/
 .DS_Store
 *.local
+.env
 
 # Large test files (exceed GitHub's 100MB limit)
 testFiles/pointcloud-481MB.swt
