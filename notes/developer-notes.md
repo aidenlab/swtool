@@ -27,5 +27,5 @@ The HDF5 indexer (`src/indexer/hdf5Indexer.js`) is a complete JavaScript rewrite
 - h5wasm uses an Emscripten virtual filesystem — HDF5 files are written to a virtual path in memory, then read back as bytes for download.
 - jsfive (pure-JS HDF5 reader) is used *separately* by the indexer to read back the written bytes and build the index.
 - The indexer appends a `_index` dataset and `_index_offset` attribute to the HDF5 file after initial creation.
-- Vite config sets `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy` headers (required for SharedArrayBuffer / WebAssembly).
+- h5wasm 0.9.0 does not use SharedArrayBuffer or threads. COOP/COEP headers are not required.
 - h5wasm is excluded from Vite's dependency optimization (`optimizeDeps.exclude`).
