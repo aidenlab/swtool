@@ -37,11 +37,21 @@ export function showSuccess(outputFilename, bytes, onDownload) {
   statusArea().innerHTML = `
     <div class="alert alert-success d-flex align-items-center justify-content-between gap-2 mb-0">
       <span>✅ Conversion complete.</span>
-      <a id="download-link" href="${url}" download="${escapeHtml(outputFilename)}"
-         class="btn btn-sm btn-success text-nowrap">
-        Download ${escapeHtml(outputFilename)}
-      </a>
+      <div class="d-flex gap-2">
+        <a id="download-link" href="${url}" download="${escapeHtml(outputFilename)}"
+           class="btn btn-sm btn-success text-nowrap">
+          Download ${escapeHtml(outputFilename)}
+        </a>
+        <button id="open-spacewalk-btn" type="button"
+                class="btn btn-sm btn-primary text-nowrap">
+          Open in Spacewalk
+        </button>
+      </div>
     </div>`
+
+  document.getElementById('open-spacewalk-btn').addEventListener('click', () => {
+    openInSpacewalk(bytes, outputFilename)
+  })
 
   if (onDownload) {
     document.getElementById('download-link').addEventListener('click', () => {
@@ -124,6 +134,22 @@ export function resetInputPanel() {
   hideStagedFile()
   hideInputPanel()
   statusArea().innerHTML = ''
+}
+
+// ── Spacewalk integration ─────────────────────────────────────────────────────
+
+function openInSpacewalk(bytes, filename) {
+  const spacewalkURL = import.meta.env.VITE_SPACEWALK_URL
+  const spacewalkWindow = window.open(spacewalkURL)
+
+  window.addEventListener('message', function handler(event) {
+    if (event.data?.type !== 'spacewalk-ready') return
+    window.removeEventListener('message', handler)
+    spacewalkWindow.postMessage(
+      { type: 'spacewalk-load', bytes, filename },
+      '*'
+    )
+  })
 }
 
 // ── Utils ─────────────────────────────────────────────────────────────────────

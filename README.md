@@ -40,6 +40,14 @@ Output is in `dist/`. Serve it from any static host.
 
 **Convert** — Click **Convert & Download** to generate and download the `.sw` file.
 
+## Open in Spacewalk
+
+After conversion, an **Open in Spacewalk** button appears alongside the download link. Clicking it opens [Spacewalk](https://aidenlab.org/spacewalk) in a new browser tab and sends the converted file directly — no download or upload step required. The file is transferred in-memory between the two apps using the browser's `postMessage` API.
+
+This enables a seamless workflow: convert a `.swt` file and immediately visualize the 3D chromatin structure in Spacewalk with a single click.
+
+The Spacewalk URL is configured via the `VITE_SPACEWALK_URL` environment variable in `.env`. See `.env.example` for the default production value.
+
 ## .swt file format
 
 ```
