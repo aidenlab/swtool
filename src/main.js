@@ -105,7 +105,7 @@ document.getElementById('convert-btn').addEventListener('click', () => {
 
 document.getElementById('cancel-btn').addEventListener('click', () => {
   clearStaged()
-  hideInputPanel()
+  resetInputPanel()
 })
 
 // ── Staging helpers ──────────────────────────────────────────────────────────
@@ -155,7 +155,7 @@ function clearStaged() {
 async function runConversion(mode) {
   if (!pendingFile && !pendingUrl) return
 
-  const includeIndex = document.getElementById('include-index').checked
+  const includeIndex = true
 
   showConverting()
   if (activeDropZone) showDropZoneSpinner(activeDropZone)

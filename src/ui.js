@@ -22,9 +22,9 @@ export function showIdle() {
 }
 
 export function showConverting() {
-  actionButtons().classList.add('d-none')
+  document.getElementById('convert-btn').classList.add('d-none')
   statusArea().innerHTML = `
-    <div class="alert alert-info d-flex align-items-center gap-2 mb-0">
+    <div class="alert alert-info d-flex align-items-center gap-2">
       <span class="spinner-border text-info" role="status" aria-hidden="true"></span>
       <span>Converting…</span>
     </div>`
@@ -35,7 +35,7 @@ export function showSuccess(outputFilename, bytes, onDownload) {
   const url  = URL.createObjectURL(blob)
 
   statusArea().innerHTML = `
-    <div class="alert alert-success d-flex align-items-center justify-content-between gap-2 mb-0">
+    <div class="alert alert-success d-flex align-items-center justify-content-between gap-2">
       <span>✅ Conversion complete.</span>
       <div class="d-flex gap-2">
         <a id="download-link" href="${url}" download="${escapeHtml(outputFilename)}"
@@ -62,7 +62,7 @@ export function showSuccess(outputFilename, bytes, onDownload) {
 
 export function showError(message) {
   statusArea().innerHTML = `
-    <div class="alert alert-danger d-flex align-items-center gap-2 mb-0">
+    <div class="alert alert-danger d-flex align-items-center gap-2">
       <span>❌</span>
       <span>${escapeHtml(message)}</span>
     </div>`
