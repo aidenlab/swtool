@@ -30,7 +30,7 @@ export function showConverting() {
     </div>`
 }
 
-export function showSuccess(outputFilename, bytes, onDownload) {
+export function showSuccess(outputFilename, bytes) {
   const blob = new Blob([bytes], { type: 'application/octet-stream' })
   const url  = URL.createObjectURL(blob)
 
@@ -53,11 +53,8 @@ export function showSuccess(outputFilename, bytes, onDownload) {
     openInSpacewalk(bytes, outputFilename)
   })
 
-  if (onDownload) {
-    document.getElementById('download-link').addEventListener('click', () => {
-      setTimeout(onDownload, 200)
-    })
-  }
+  // Let the user linger — rename Cancel to Dismiss
+  document.getElementById('cancel-btn').textContent = 'Dismiss'
 }
 
 export function showError(message) {
@@ -134,6 +131,7 @@ export function resetInputPanel() {
   hideStagedFile()
   hideInputPanel()
   statusArea().innerHTML = ''
+  document.getElementById('cancel-btn').textContent = 'Cancel'
 }
 
 // ── Spacewalk integration ─────────────────────────────────────────────────────

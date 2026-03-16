@@ -166,10 +166,7 @@ async function runConversion(mode) {
     const bytes = await convertInWorker({ file: pendingFile, url: pendingUrl, mode, includeIndex })
     const outputName = deriveOutputName(pendingFilename)
     hideDropZoneSpinners()
-    showSuccess(outputName, bytes, () => {
-      clearStaged()
-      resetInputPanel()
-    })
+    showSuccess(outputName, bytes)
   } catch (err) {
     hideDropZoneSpinners()
     showError(err.message)
