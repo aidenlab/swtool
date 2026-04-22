@@ -22,11 +22,10 @@ function ensureReady() {
  *
  * @param {{ metadata, regions, traces }} parsedData  Output of parseSwtText()
  * @param {'single_point'|'multi_point'} mode
- * @param {boolean} liveContactMap
  * @param {boolean} [includeIndex=true]  Add _index dataset for hdf5-indexed-reader
  * @returns {Promise<Uint8Array>}  Raw bytes of the .sw HDF5 file
  */
-export async function convertToSw(parsedData, mode, liveContactMap, includeIndex = true) {
+export async function convertToSw(parsedData, mode, includeIndex = true) {
   const { metadata, regions, traces } = parsedData
 
   await ensureReady()
@@ -48,17 +47,7 @@ export async function convertToSw(parsedData, mode, liveContactMap, includeIndex
   const regionIndex = writeRegionList(nameGroup, regions)
 
   // Pass 2: spatial_position/t_N
-  const lcmv = writeSpatialGroup(nameGroup, traces, regionIndex, mode, liveContactMap)
-
-  // Optional live contact map vertices (single-point only)
-  if (lcmv) {
-    nameGroup.create_dataset({
-      name:  'live_contact_map_vertices',
-      data:  lcmv.data,
-      shape: lcmv.shape,
-      dtype: '<d',
-    })
-  }
+  writeSpatialGroup(nameGroup, traces, regionIndex, mode)
 
   file.flush()
   file.close()

@@ -35,7 +35,6 @@ Output is in `dist/`. Serve it from any static host.
 
 **Output options** (optional):
 
-- **Include live contact map vertices** (single-point only) — adds LCM vertices to the output.
 - **Include index for web viewing** (default: on) — adds a path-to-offset index for efficient web-based dataset access. See [docs/HDF5_INDEXING.md](docs/HDF5_INDEXING.md).
 
 **Convert** — Click **Convert & Download** to generate and download the `.sw` file.

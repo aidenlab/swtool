@@ -15,7 +15,7 @@ self.onmessage = async ({ data: { file, url, mode, includeIndex } }) => {
       source = file
     }
     const parsed = await parseSwtFile(source)
-    const bytes  = await convertToSw(parsed, mode, false, includeIndex)
+    const bytes  = await convertToSw(parsed, mode, includeIndex)
     self.postMessage({ ok: true, bytes }, [bytes.buffer])
   } catch (err) {
     self.postMessage({ ok: false, error: err.message })
