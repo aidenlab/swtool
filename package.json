@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Browser-based Spacewalk text-to-binary converter",
   "type": "module",
+  "bin": {
+    "swtool": "./bin/swtool.mjs"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
