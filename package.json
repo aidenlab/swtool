@@ -1,6 +1,6 @@
 {
   "name": "swtool",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Browser-based Spacewalk text-to-binary converter",
   "type": "module",
   "bin": {
