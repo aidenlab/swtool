@@ -1,14 +1,19 @@
 # swtool
 
-Browser-based replacement for [swt2sw](https://github.com/turner/swt2sw), a Python command-line tool that converts Spacewalk text files (`.swt`) to HDF5 binary files (`.sw`). swtool includes a complete JavaScript rewrite of the Python-based HDF5 indexer from swt2sw.
+Replacement for [swt2sw](https://github.com/turner/swt2sw), a Python command-line tool that converts Spacewalk text files (`.swt`) to HDF5 binary files (`.sw`). swtool includes a complete JavaScript rewrite of the Python-based HDF5 indexer from swt2sw.
 
-No installation required for end-users — drop a `.swt` file onto the image that matches its type (ball & stick or point cloud), or use the file picker or URL. All conversion runs entirely client-side; no data is sent to a server.
+swtool ships in two forms that share the same conversion core:
+
+- **Web app** — drop a `.swt` file onto the image that matches its type (ball & stick or point cloud), or use the file picker or URL. All conversion runs entirely client-side; no data is sent to a server.
+- **CLI** — a Node command-line tool for scripted or batch use. See [CLI usage](#cli-usage).
 
 ## Prerequisites
 
 - Node.js ≥ 18
 
-## Development
+## Web app
+
+### Development
 
 ```bash
 npm install
@@ -17,7 +22,7 @@ npm run dev
 
 Open <http://localhost:5173> in your browser.
 
-## Production build
+### Production build
 
 ```bash
 npm run build
@@ -25,7 +30,7 @@ npm run build
 
 Output is in `dist/`. Serve it from any static host.
 
-## Usage
+### Usage
 
 **Load a file** (choose one):
 
@@ -39,13 +44,62 @@ Output is in `dist/`. Serve it from any static host.
 
 **Convert** — Click **Convert & Download** to generate and download the `.sw` file.
 
-## Open in Spacewalk
+### Open in Spacewalk
 
 After conversion, an **Open in Spacewalk** button appears alongside the download link. Clicking it opens [Spacewalk](https://aidenlab.org/spacewalk) in a new browser tab and sends the converted file directly — no download or upload step required. The file is transferred in-memory between the two apps using the browser's `postMessage` API.
 
 This enables a seamless workflow: convert a `.swt` file and immediately visualize the 3D chromatin structure in Spacewalk with a single click.
 
 The Spacewalk URL is configured via the `VITE_SPACEWALK_URL` environment variable in `.env`. See `.env.example` for the default production value.
+
+## CLI usage
+
+swtool can also be used as a Unix-style command-line tool. The CLI uses the same conversion core as the web app.
+
+### Install
+
+From a clone of this repo:
+
+```bash
+npm install
+npm link         # registers the `swtool` command globally
+```
+
+To uninstall the global command later: `npm unlink -g swtool`.
+
+Alternatively, run it directly from the repo without installing:
+
+```bash
+node bin/swtool.mjs <args>
+```
+
+### Usage
+
+```bash
+swtool <input.swt> [options]
+```
+
+**Options:**
+
+| Flag | Description |
+| --- | --- |
+| `-m, --mode <mode>` | `single_point` (ball & stick) or `multi_point` (point cloud). Default: `single_point`. |
+| `-o, --output <path>` | Output `.sw` path. Default: same basename as input with `.sw` extension. |
+| `--no-index` | Skip the `_index` dataset (faster, but the output will not be web-viewable). |
+| `-h, --help` | Show help. |
+
+**Examples:**
+
+```bash
+# Ball & stick (default mode), output alongside input
+swtool ball-and-stick.swt
+
+# Point cloud, custom output path
+swtool pointcloud.swt -m multi_point -o /tmp/out.sw
+
+# Skip the _index dataset
+swtool ball-and-stick.swt --no-index
+```
 
 ## .swt file format
 
