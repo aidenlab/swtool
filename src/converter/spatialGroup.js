@@ -4,10 +4,15 @@
  * Single-point mode: each t_N has shape (n_data_lines, 3) — columns x, y, z.
  * Multi-point mode:  each t_N has shape (n_points, 4)    — columns region_index, x, y, z.
  *
+ * For single-point mode, also returns a baked live_contact_map_vertices array
+ * of shape (trace_count, trace_length, 3) float32, NaN for missing — the v1
+ * format hic-straw's loadLiveVertices consumes as a fast path.
+ *
  * @param {import('h5wasm').Group} nameGroup
  * @param {Map<number, Array>} traces
  * @param {Map<string, number>} regionIndex
  * @param {'single_point'|'multi_point'} mode
+ * @returns {{ data: Float32Array, shape: number[] } | null}
  */
 export function writeSpatialGroup(nameGroup, traces, regionIndex, mode) {
   const spGroup = nameGroup.create_group('spatial_position')
@@ -21,6 +26,11 @@ export function writeSpatialGroup(nameGroup, traces, regionIndex, mode) {
       writeMultiPointDataset(spGroup, datasetName, points, regionIndex)
     }
   }
+
+  if (mode === 'single_point' && traces.size > 0) {
+    return buildLiveContactMapVerticesBake(traces, regionIndex)
+  }
+  return null
 }
 
 // ── Single-point ──────────────────────────────────────────────────────────────
@@ -66,4 +76,30 @@ function writeMultiPointDataset(group, name, points, regionIndex) {
   const n = rows.length / 4
   const data = new Float64Array(rows)
   group.create_dataset({ name, data, shape: [n, 4], dtype: '<d' })
+}
+
+// ── Live contact map vertices bake (v1) ──────────────────────────────────────
+
+function buildLiveContactMapVerticesBake(traces, regionIndex) {
+  const traceLength = regionIndex.size
+  const sortedTraceIndices = [...traces.keys()].sort((a, b) => a - b)
+  const traceCount = sortedTraceIndices.length
+
+  const data = new Float32Array(traceCount * traceLength * 3)
+  data.fill(NaN)
+
+  for (let ti = 0; ti < traceCount; ti++) {
+    const points = traces.get(sortedTraceIndices[ti])
+    const traceBase = ti * traceLength * 3
+    for (const { chr, start, end, x, y, z } of points) {
+      const ri = regionIndex.get(`${chr}%${start}%${end}`)
+      if (ri == null) continue
+      const off = traceBase + ri * 3
+      data[off]     = x
+      data[off + 1] = y
+      data[off + 2] = z
+    }
+  }
+
+  return { data, shape: [traceCount, traceLength, 3] }
 }

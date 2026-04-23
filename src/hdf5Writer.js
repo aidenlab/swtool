@@ -46,8 +46,17 @@ export async function convertToSw(parsedData, mode, includeIndex = true) {
   // Pass 1: genomic_position/regions
   const regionIndex = writeRegionList(nameGroup, regions)
 
-  // Pass 2: spatial_position/t_N
-  writeSpatialGroup(nameGroup, traces, regionIndex, mode)
+  // Pass 2: spatial_position/t_N (+ live_contact_map_vertices bake for single_point)
+  const bake = writeSpatialGroup(nameGroup, traces, regionIndex, mode)
+  if (bake) {
+    nameGroup.create_dataset({
+      name:  'live_contact_map_vertices',
+      data:  bake.data,
+      shape: bake.shape,
+      dtype: '<f',
+    })
+    headerGroup.create_attribute('live_contact_map_vertices_version', 1, [], '<i4')
+  }
 
   file.flush()
   file.close()
