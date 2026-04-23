@@ -53,7 +53,7 @@ for (const test of tests) {
   // ── JS swtool ─────────────────────────────────────────────────────────
   const swtText = readFileSync(test.swtPath, 'utf8')
   const parsed = parseSwtText(swtText)
-  const jsBytes = await convertToSw(parsed, test.mode, false, true)
+  const jsBytes = await convertToSw(parsed, test.mode, true)
   const jsIndex = extractIndex(jsBytes)
 
   if (!jsIndex) {
