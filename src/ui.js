@@ -136,8 +136,14 @@ export function resetInputPanel() {
 
 // ── Spacewalk integration ─────────────────────────────────────────────────────
 
+const DEFAULT_SPACEWALK_URL = 'https://aidenlab.org/spacewalk/'
+
 function openInSpacewalk(bytes, filename) {
-  const spacewalkURL = import.meta.env.VITE_SPACEWALK_URL
+  let spacewalkURL = import.meta.env.VITE_SPACEWALK_URL
+  if (!spacewalkURL) {
+    console.warn(`VITE_SPACEWALK_URL is not set; falling back to ${DEFAULT_SPACEWALK_URL}`)
+    spacewalkURL = DEFAULT_SPACEWALK_URL
+  }
   const spacewalkWindow = window.open(spacewalkURL)
 
   window.addEventListener('message', function handler(event) {
