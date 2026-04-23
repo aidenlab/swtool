@@ -56,22 +56,40 @@ The Spacewalk URL is configured via the `VITE_SPACEWALK_URL` environment variabl
 
 swtool can also be used as a Unix-style command-line tool. The CLI uses the same conversion core as the web app.
 
-### Install
+### Install — download a prebuilt binary (recommended)
 
-From a clone of this repo:
+The easiest option: download a single executable file. No Node, no npm, no dependencies.
+
+1. Go to the [Releases](https://github.com/aidenlab/swtool/releases) page
+2. Download the file that matches your system:
+   - **Mac (Apple Silicon)** — `swtool-macos-arm64`
+   - **Mac (Intel)** — `swtool-macos-x64`
+   - **Linux** — `swtool-linux-x64`
+   - **Windows** — `swtool-windows-x64.exe`
+3. On macOS/Linux, make it executable: `chmod +x swtool-macos-arm64`
+4. Rename it to `swtool` (optional) and put it somewhere on your `PATH`, e.g. `/usr/local/bin/`
+
+On macOS the first run may be blocked by Gatekeeper. If so, right-click the file in Finder → Open, or run `xattr -d com.apple.quarantine swtool-macos-arm64` once.
+
+### Install — from source (for developers)
+
+If you have Node ≥ 18 and want to run the CLI directly from a clone of this repo:
 
 ```bash
 npm install
-npm link         # registers the `swtool` command globally
-```
-
-To uninstall the global command later: `npm unlink -g swtool`.
-
-Alternatively, run it directly from the repo without installing:
-
-```bash
 node bin/swtool.mjs <args>
 ```
+
+### Building the binaries yourself
+
+Requires [Bun](https://bun.sh) (`curl -fsSL https://bun.sh/install | bash`).
+
+```bash
+npm run build:cli        # build for your current platform only
+npm run build:cli:all    # cross-compile for macOS (arm64 + x64), Linux, Windows
+```
+
+Output goes to `dist-cli/`.
 
 ### Usage
 
