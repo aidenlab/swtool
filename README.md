@@ -1,14 +1,19 @@
 # swtool
 
-Browser-based replacement for [swt2sw](https://github.com/turner/swt2sw), a Python command-line tool that converts Spacewalk text files (`.swt`) to HDF5 binary files (`.sw`). swtool includes a complete JavaScript rewrite of the Python-based HDF5 indexer from swt2sw.
+Replacement for [swt2sw](https://github.com/turner/swt2sw), a Python command-line tool that converts Spacewalk text files (`.swt`) to HDF5 binary files (`.sw`). swtool includes a complete JavaScript rewrite of the Python-based HDF5 indexer from swt2sw.
 
-No installation required for end-users — drop a `.swt` file onto the image that matches its type (ball & stick or point cloud), or use the file picker or URL. All conversion runs entirely client-side; no data is sent to a server.
+swtool ships in two forms that share the same conversion core:
+
+- **Web app** — drop a `.swt` file onto the image that matches its type (ball & stick or point cloud), or use the file picker or URL. All conversion runs entirely client-side; no data is sent to a server.
+- **CLI** — a Node command-line tool for scripted or batch use. See [CLI usage](#cli-usage).
 
 ## Prerequisites
 
 - Node.js ≥ 18
 
-## Development
+## Web app
+
+### Development
 
 ```bash
 npm install
@@ -17,7 +22,7 @@ npm run dev
 
 Open <http://localhost:5173> in your browser.
 
-## Production build
+### Production build
 
 ```bash
 npm run build
@@ -25,7 +30,7 @@ npm run build
 
 Output is in `dist/`. Serve it from any static host.
 
-## Usage
+### Usage
 
 **Load a file** (choose one):
 
@@ -39,13 +44,80 @@ Output is in `dist/`. Serve it from any static host.
 
 **Convert** — Click **Convert & Download** to generate and download the `.sw` file.
 
-## Open in Spacewalk
+### Open in Spacewalk
 
 After conversion, an **Open in Spacewalk** button appears alongside the download link. Clicking it opens [Spacewalk](https://aidenlab.org/spacewalk) in a new browser tab and sends the converted file directly — no download or upload step required. The file is transferred in-memory between the two apps using the browser's `postMessage` API.
 
 This enables a seamless workflow: convert a `.swt` file and immediately visualize the 3D chromatin structure in Spacewalk with a single click.
 
 The Spacewalk URL is configured via the `VITE_SPACEWALK_URL` environment variable in `.env`. See `.env.example` for the default production value.
+
+## CLI usage
+
+swtool can also be used as a Unix-style command-line tool. The CLI uses the same conversion core as the web app.
+
+### Install — download a prebuilt binary (recommended)
+
+The easiest option: download a single executable file. No Node, no npm, no dependencies.
+
+1. Go to the [Releases](https://github.com/aidenlab/swtool/releases) page
+2. Download the file that matches your system:
+   - **Mac (Apple Silicon)** — `swtool-macos-arm64`
+   - **Mac (Intel)** — `swtool-macos-x64`
+   - **Linux** — `swtool-linux-x64`
+   - **Windows** — `swtool-windows-x64.exe`
+3. On macOS/Linux, make it executable: `chmod +x swtool-macos-arm64`
+4. Rename it to `swtool` (optional) and put it somewhere on your `PATH`, e.g. `/usr/local/bin/`
+
+On macOS the first run may be blocked by Gatekeeper. If so, right-click the file in Finder → Open, or run `xattr -d com.apple.quarantine swtool-macos-arm64` once.
+
+### Install — from source (for developers)
+
+If you have Node ≥ 18 and want to run the CLI directly from a clone of this repo:
+
+```bash
+npm install
+node bin/swtool.mjs <args>
+```
+
+### Building the binaries yourself
+
+Requires [Bun](https://bun.sh) (`curl -fsSL https://bun.sh/install | bash`).
+
+```bash
+npm run build:cli        # build for your current platform only
+npm run build:cli:all    # cross-compile for macOS (arm64 + x64), Linux, Windows
+```
+
+Output goes to `dist-cli/`.
+
+### Usage
+
+```bash
+swtool <input.swt> [options]
+```
+
+**Options:**
+
+| Flag | Description |
+| --- | --- |
+| `-m, --mode <mode>` | `single_point` (ball & stick) or `multi_point` (point cloud). Default: `single_point`. |
+| `-o, --output <path>` | Output `.sw` path. Default: same basename as input with `.sw` extension. |
+| `--no-index` | Skip the `_index` dataset (faster, but the output will not be web-viewable). |
+| `-h, --help` | Show help. |
+
+**Examples:**
+
+```bash
+# Ball & stick (default mode), output alongside input
+swtool ball-and-stick.swt
+
+# Point cloud, custom output path
+swtool pointcloud.swt -m multi_point -o /tmp/out.sw
+
+# Skip the _index dataset
+swtool ball-and-stick.swt --no-index
+```
 
 ## .swt file format
 
