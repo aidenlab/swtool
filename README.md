@@ -69,7 +69,12 @@ The easiest option: download a single executable file. No Node, no npm, no depen
 3. On macOS/Linux, make it executable: `chmod +x swtool-macos-arm64`
 4. Rename it to `swtool` (optional) and put it somewhere on your `PATH`, e.g. `/usr/local/bin/`
 
-On macOS the first run may be blocked by Gatekeeper. If so, right-click the file in Finder → Open, or run `xattr -d com.apple.quarantine swtool-macos-arm64` once.
+**macOS: first-run Gatekeeper prompt.** The binary is ad-hoc signed but not notarized by Apple, so on first launch macOS will show a dialog saying it cannot verify the developer. To approve it:
+
+- **Recommended:** right-click the file in Finder → **Open** → **Open** in the confirmation dialog. After approving once, subsequent runs work normally.
+- **Or from the terminal:** run `xattr -d com.apple.quarantine swtool-macos-arm64` once to strip the download-quarantine flag.
+
+If you instead see a "swtool-macos-arm64 is damaged and can't be opened" error, you have an older unsigned build — redownload from the latest release.
 
 ### Install — from source (for developers)
 

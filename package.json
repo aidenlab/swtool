@@ -1,6 +1,6 @@
 {
   "name": "swtool",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Browser-based Spacewalk text-to-binary converter",
   "type": "module",
   "bin": {
@@ -11,7 +11,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "build:cli": "bun build bin/swtool.mjs --compile --outfile dist-cli/swtool",
-    "build:cli:all": "bun build bin/swtool.mjs --compile --target=bun-darwin-arm64 --outfile dist-cli/swtool-macos-arm64 && bun build bin/swtool.mjs --compile --target=bun-darwin-x64 --outfile dist-cli/swtool-macos-x64 && bun build bin/swtool.mjs --compile --target=bun-linux-x64 --outfile dist-cli/swtool-linux-x64 && bun build bin/swtool.mjs --compile --target=bun-windows-x64 --outfile dist-cli/swtool-windows-x64.exe"
+    "build:cli:all": "bun build bin/swtool.mjs --compile --target=bun-darwin-arm64 --outfile dist-cli/swtool-macos-arm64 && bun build bin/swtool.mjs --compile --target=bun-darwin-x64 --outfile dist-cli/swtool-macos-x64 && bun build bin/swtool.mjs --compile --target=bun-linux-x64 --outfile dist-cli/swtool-linux-x64 && bun build bin/swtool.mjs --compile --target=bun-windows-x64 --outfile dist-cli/swtool-windows-x64.exe && codesign --force --sign - --timestamp=none dist-cli/swtool-macos-arm64 dist-cli/swtool-macos-x64"
   },
   "devDependencies": {
     "sass": "^1.97.3",
