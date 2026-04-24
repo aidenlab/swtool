@@ -56,45 +56,18 @@ The Spacewalk URL is configured via the `VITE_SPACEWALK_URL` environment variabl
 
 swtool can also be used as a Unix-style command-line tool. The CLI uses the same conversion core as the web app.
 
-### Install — download a prebuilt binary (recommended)
+### Install
 
-The easiest option: download a single executable file. No Node, no npm, no dependencies.
-
-1. Go to the [Releases](https://github.com/aidenlab/swtool/releases) page
-2. Download the file that matches your system:
-   - **Mac (Apple Silicon)** — `swtool-macos-arm64`
-   - **Mac (Intel)** — `swtool-macos-x64`
-   - **Linux** — `swtool-linux-x64`
-   - **Windows** — `swtool-windows-x64.exe`
-3. On macOS/Linux, make it executable: `chmod +x swtool-macos-arm64`
-4. Rename it to `swtool` (optional) and put it somewhere on your `PATH`, e.g. `/usr/local/bin/`
-
-**macOS: first-run Gatekeeper prompt.** The binary is ad-hoc signed but not notarized by Apple, so on first launch macOS will show a dialog saying it cannot verify the developer. To approve it:
-
-- **Recommended:** right-click the file in Finder → **Open** → **Open** in the confirmation dialog. After approving once, subsequent runs work normally.
-- **Or from the terminal:** run `xattr -d com.apple.quarantine swtool-macos-arm64` once to strip the download-quarantine flag.
-
-If you instead see a "swtool-macos-arm64 is damaged and can't be opened" error, you have an older unsigned build — redownload from the latest release.
-
-### Install — from source (for developers)
-
-If you have Node ≥ 18 and want to run the CLI directly from a clone of this repo:
+Build a standalone executable from source. Requires [Bun](https://bun.sh) (`curl -fsSL https://bun.sh/install | bash`) and Node ≥ 18.
 
 ```bash
+git clone https://github.com/aidenlab/swtool.git
+cd swtool
 npm install
-node bin/swtool.mjs <args>
+npm run build:cli
 ```
 
-### Building the binaries yourself
-
-Requires [Bun](https://bun.sh) (`curl -fsSL https://bun.sh/install | bash`).
-
-```bash
-npm run build:cli        # build for your current platform only
-npm run build:cli:all    # cross-compile for macOS (arm64 + x64), Linux, Windows
-```
-
-Output goes to `dist-cli/`.
+This produces `dist-cli/swtool` — a single self-contained executable for your current platform. Put it somewhere on your `PATH` (e.g. `/usr/local/bin/swtool`) or invoke it directly.
 
 ### Usage
 
