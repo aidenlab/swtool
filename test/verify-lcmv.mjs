@@ -8,7 +8,11 @@
  *     NaN where the trace has no entry for that region.
  *
  * Checks for pointcloud (multi_point):
- *   - No live_contact_map_vertices dataset, no version attribute (phase 2).
+ *   - Header.live_contact_map_vertices_version == 1
+ *   - <name>/live_contact_map_vertices shape (trace_count, trace_length, 3) float32
+ *   - baked[i][region_index] equals the arithmetic mean (over finite points)
+ *     of that trace's point cloud at that region, NaN where the cell has
+ *     no finite points.
  *
  * Usage:
  *   node test/verify-lcmv.mjs
@@ -41,7 +45,7 @@ const tests = [
     name: 'pointcloud (multi_point)',
     swtPath: '/Users/turner/SpacewalkDevelopment/swt2sw/pointcloud-missing-genomic-regions.swt',
     mode: 'multi_point',
-    expectBake: false,
+    expectBake: true,
   },
 ]
 
@@ -108,12 +112,33 @@ for (const test of tests) {
     const points = parsed.traces.get(sortedTraceIndices[ti])
     const expected = new Float32Array(traceLength * 3)
     expected.fill(NaN)
-    for (const { chr, start, end, x, y, z } of points) {
-      const ri = regionIdx.get(regionKey(chr, start, end))
-      if (ri == null) continue
-      expected[ri * 3]     = x
-      expected[ri * 3 + 1] = y
-      expected[ri * 3 + 2] = z
+
+    if (test.mode === 'single_point') {
+      for (const { chr, start, end, x, y, z } of points) {
+        const ri = regionIdx.get(regionKey(chr, start, end))
+        if (ri == null) continue
+        expected[ri * 3]     = x
+        expected[ri * 3 + 1] = y
+        expected[ri * 3 + 2] = z
+      }
+    } else {
+      const sumX = new Float64Array(traceLength)
+      const sumY = new Float64Array(traceLength)
+      const sumZ = new Float64Array(traceLength)
+      const counts = new Uint32Array(traceLength)
+      for (const { chr, start, end, x, y, z } of points) {
+        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) continue
+        const ri = regionIdx.get(regionKey(chr, start, end))
+        if (ri == null) continue
+        sumX[ri] += x; sumY[ri] += y; sumZ[ri] += z; counts[ri]++
+      }
+      for (let ri = 0; ri < traceLength; ri++) {
+        const n = counts[ri]
+        if (n === 0) continue
+        expected[ri * 3]     = sumX[ri] / n
+        expected[ri * 3 + 1] = sumY[ri] / n
+        expected[ri * 3 + 2] = sumZ[ri] / n
+      }
     }
     const rowBase = ti * traceLength * 3
     for (let j = 0; j < expected.length; j++) {
