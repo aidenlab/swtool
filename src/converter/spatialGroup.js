@@ -4,9 +4,10 @@
  * Single-point mode: each t_N has shape (n_data_lines, 3) — columns x, y, z.
  * Multi-point mode:  each t_N has shape (n_points, 4)    — columns region_index, x, y, z.
  *
- * For single-point mode, also returns a baked live_contact_map_vertices array
- * of shape (trace_count, trace_length, 3) float32, NaN for missing — the v1
- * format hic-straw's loadLiveVertices consumes as a fast path.
+ * Also returns a baked live_contact_map_vertices array of shape
+ * (trace_count, trace_length, 3) float32, NaN for missing — the v1 format
+ * hic-straw's loadLiveVertices consumes as a fast path. For multi-point,
+ * each (trace, region) cell is the arithmetic mean of its point cloud.
  *
  * @param {import('h5wasm').Group} nameGroup
  * @param {Map<number, Array>} traces
@@ -27,10 +28,10 @@ export function writeSpatialGroup(nameGroup, traces, regionIndex, mode) {
     }
   }
 
-  if (mode === 'single_point' && traces.size > 0) {
-    return buildLiveContactMapVerticesBake(traces, regionIndex)
-  }
-  return null
+  if (traces.size === 0) return null
+  return mode === 'single_point'
+    ? buildLiveContactMapVerticesBakeSinglePoint(traces, regionIndex)
+    : buildLiveContactMapVerticesBakeMultiPoint(traces, regionIndex)
 }
 
 // ── Single-point ──────────────────────────────────────────────────────────────
@@ -80,7 +81,7 @@ function writeMultiPointDataset(group, name, points, regionIndex) {
 
 // ── Live contact map vertices bake (v1) ──────────────────────────────────────
 
-function buildLiveContactMapVerticesBake(traces, regionIndex) {
+function buildLiveContactMapVerticesBakeSinglePoint(traces, regionIndex) {
   const traceLength = regionIndex.size
   const sortedTraceIndices = [...traces.keys()].sort((a, b) => a - b)
   const traceCount = sortedTraceIndices.length
@@ -98,6 +99,49 @@ function buildLiveContactMapVerticesBake(traces, regionIndex) {
       data[off]     = x
       data[off + 1] = y
       data[off + 2] = z
+    }
+  }
+
+  return { data, shape: [traceCount, traceLength, 3] }
+}
+
+// Per (trace, region): arithmetic mean of xyz over the region's point cloud,
+// skipping any NaN coordinates. Cells with no finite points stay NaN.
+function buildLiveContactMapVerticesBakeMultiPoint(traces, regionIndex) {
+  const traceLength = regionIndex.size
+  const sortedTraceIndices = [...traces.keys()].sort((a, b) => a - b)
+  const traceCount = sortedTraceIndices.length
+
+  const data = new Float32Array(traceCount * traceLength * 3)
+  data.fill(NaN)
+
+  const sumX = new Float64Array(traceLength)
+  const sumY = new Float64Array(traceLength)
+  const sumZ = new Float64Array(traceLength)
+  const counts = new Uint32Array(traceLength)
+
+  for (let ti = 0; ti < traceCount; ti++) {
+    sumX.fill(0); sumY.fill(0); sumZ.fill(0); counts.fill(0)
+
+    const points = traces.get(sortedTraceIndices[ti])
+    for (const { chr, start, end, x, y, z } of points) {
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) continue
+      const ri = regionIndex.get(`${chr}%${start}%${end}`)
+      if (ri == null) continue
+      sumX[ri] += x
+      sumY[ri] += y
+      sumZ[ri] += z
+      counts[ri]++
+    }
+
+    const traceBase = ti * traceLength * 3
+    for (let ri = 0; ri < traceLength; ri++) {
+      const n = counts[ri]
+      if (n === 0) continue
+      const off = traceBase + ri * 3
+      data[off]     = sumX[ri] / n
+      data[off + 1] = sumY[ri] / n
+      data[off + 2] = sumZ[ri] / n
     }
   }
 
